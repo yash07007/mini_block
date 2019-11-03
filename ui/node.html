@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Voting Management</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+        crossorigin="anonymous">
+    <style>
+        .lds-ring {
+            display: inline-block;
+            position: relative;
+            width: 64px;
+            height: 64px;
+        }
+
+        .lds-ring div {
+            box-sizing: border-box;
+            display: block;
+            position: absolute;
+            width: 51px;
+            height: 51px;
+            margin: 6px;
+            border: 6px solid #fa923f;
+            border-radius: 50%;
+            animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            border-color: #fa923f transparent transparent transparent;
+        }
+
+        .lds-ring div:nth-child(1) {
+            animation-delay: -0.45s;
+        }
+
+        .lds-ring div:nth-child(2) {
+            animation-delay: -0.3s;
+        }
+
+        .lds-ring div:nth-child(3) {
+            animation-delay: -0.15s;
+        }
+
+        @keyframes lds-ring {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="row mb-3">
+                <div class="col">
+                    <h1>Manage your Voter Blockchain</h1>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/">Node</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/network">Network</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <hr>
+            <div v-if="error" class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            <div v-if="success" class="alert alert-success" role="alert" style="overflow-x: scroll;">
+                {{ success }}
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div v-if="!nodeLoading">
+                        <button class="btn btn-primary" @click="onCreateNode">
+                            Create new Node
+                        </button>
+                        <button class="btn btn-primary" @click="onLoadNode">
+                            Load Node
+                        </button>
+                    </div>
+
+                    <div v-if="nodeLoading" class="lds-ring">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                </div>
+                <div class="col text-right">
+                    <h2>Total Votes: {{ votes.toFixed(2) }}</h2>
+                </div>
+            </div>
+            <hr>
+            <div v-if="!node" class="row">
+                <div class="col">
+                    <div class="alert alert-warning">Create a Node to start voting or to mine blocks!</div>
+                </div>
+            </div>
+            <div v-if="node" class="row">
+                <div class="col">
+                    <form @submit.prevent="onSendTx">
+                        <div class="form-group">
+                            <label for="candidateId">Candidate Id</label>
+                            <input v-model="outgoingTx.candidateId" type="text" class="form-control" id="candidateId" placeholder="Enter Candidate Id">
+                        </div>
+                        <div class="form-group">
+                            <label for="partyId">Party Id</label>
+                            <input v-model="outgoingTx.partyId" type="text" class="form-control" id="partyId">
+                        </div>
+                        <div v-if="txLoading" class="lds-ring">
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                            <div></div>
+                        </div>
+                        <button :disabled="txLoading || outgoingTx.candidateId === '' || outgoingTx.partyId === '' " type="submit" class="btn btn-primary">Cast Vote</button>
+                    </form>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link" :class="{active: view === 'chain'}" href="#" @click="view = 'chain'">Blockchain</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" :class="{active: view === 'tx'}" href="#" @click="view = 'tx'">Open Transactions</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="row my-3">
+                <div class="col">
+                    <button class="btn btn-primary" @click="onLoadData">{{ view === 'chain' ? 'Load Blockchain' : 'Load Transactions' }}</button>
+                    <button v-if="view === 'chain' && node" class="btn btn-success" @click="onMine">Mine Block</button>
+                    <button class="btn btn-warning" @click="onResolve">Resolve Conflicts</button>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div v-if="dataLoading" class="lds-ring">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <div v-if="!dataLoading" class="accordion">
+                        <div class="card" v-for="(data, index) in loadedData">
+                            <div v-if="view === 'chain'" class="card-header">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" @click="showElement === index ? showElement = null : showElement = index">
+                                        Block #{{ data.index }}
+                                    </button>
+                                </h5>
+                            </div>
+                            <div v-if="view === 'chain'" class="collapse" :class="{show: showElement === index}">
+                                <div class="card-body">
+                                    <p>Previous Hash: {{ data.previous_hash }}</p>
+                                    <div class="list-group">
+                                        <div v-for="tx in data.transactions" class="list-group-item flex-column align-items-start">
+                                            <div>Node Id: {{ tx.nodeId }}</div>
+                                            <div>Candidate Id: {{ tx.candidateId }}</div>
+                                            <div>Party Id: {{ tx.partyId }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="view === 'tx'" class="card-header">
+                                <h5 class="mb-0">
+                                    <button class="btn btn-link" type="button" @click="showElement === index ? showElement = null : showElement = index">
+                                        Transaction #{{ index }}
+                                    </button>
+                                </h5>
+                            </div>
+                            <div v-if="view === 'tx'" class="collapse" :class="{show: showElement === index}">
+                                <div class="card-body">
+                                    <div class="list-group">
+                                        <div class="list-group-item flex-column align-items-start">
+                                            <div>Node Id: {{ data.nodeId }}</div>
+                                            <div>Candidate Id: {{ data.candidateId }}</div>
+                                            <div>Party Id: {{ data.partyId }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                blockchain: [],
+                openTransactions: [],
+                node: null,
+                view: 'chain',
+                nodeLoading: false,
+                txLoading: false,
+                dataLoading: false,
+                showElement: null,
+                error: null,
+                success: null,
+                votes: 0,
+                outgoingTx: {
+                    recipient: '',
+                    amount: 0
+                }
+            },
+            computed: {
+                loadedData: function () {
+                    if (this.view === 'chain') {
+                        return this.blockchain;
+                    } else {
+                        return this.openTransactions
+                    }
+                }
+            },
+            methods: {
+                onCreateNode: function () {
+                    // Send Http request to create a new wallet (and return keys)
+                    var vm = this
+                    vm.nodeLoading = true;
+                    axios.post('/node')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = 'Created node!  Public key: ' + response.data.public_key + ', Private key: ' + response.data.private_key
+                            vm.node = {
+                                public_key: response.data.public_key,
+                                private_key: response.data.private_key
+                            }
+                            vm.votes = response.data.votes;
+                            vm.nodeLoading = false;
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                            vm.node = null;
+                            vm.nodeLoading = false;
+                        });
+                },
+                onLoadNode: function () {
+                    // Send Http request to load an existing wallet (from a file on the server)
+                    var vm = this;
+                    this.nodeLoading = true;
+                    axios.get('/node')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = 'Loaded Node!  Public key: ' + response.data.public_key + ', Private key: ' + response.data.private_key
+                            vm.node = {
+                                public_key: response.data.public_key,
+                                private_key: response.data.private_key
+                            }
+                            vm.votes = response.data.votes;
+                            vm.nodeLoading = false;
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                            vm.node = null;
+                            vm.nodeLoading = false;
+                        });
+                },
+                onSendTx: function () {
+                    // Send Transaction to backend
+                    this.txLoading = true;
+                    var vm = this;
+                    axios.post('/transaction', {
+                        candidateId: vm.outgoingTx.candidateId,
+                        partyId: vm.outgoingTx.partyId
+                    })
+                    .then(function(response){
+                        vm.error = null;
+                        vm.success = response.data.message;
+                        vm.votes = response.data.votes;
+                        vm.txLoading = false;
+                        console.log(response);
+                        
+                    })
+                    .catch(function(error){
+                        vm.success = null;
+                        vm.error = error.response.data.message;
+                        vm.txLoading = false;
+                    });
+                },
+                onMine: function() {
+                    var vm = this
+                    axios.post('/mine')
+                    .then(function(response){
+                        vm.error = null;
+                        vm.success = response.data.message;
+                        vm.votes = response.data.votes;
+                    })
+                    .catch(function(error){
+                        vm.success = null;
+                        vm.error = error.response.data.message;
+                    });
+                },
+                onResolve: function(){
+                    var vm = this
+                    axios.post('/resolve-conflicts')
+                    .then(function(response){
+                        vm.error = null;
+                        vm.success = response.data.message;
+                    })
+                    .catch(function(error){
+                        vm.success = null;
+                        vm.error = error.response.data.message;
+                    });
+                },
+                onLoadData: function () {
+                    if (this.view === 'chain') {
+                        // Load blockchain data
+                        var vm = this
+                        this.dataLoading = true;
+                        axios.get('/chain')
+                            .then(function(response){
+                                vm.blockchain = response.data;
+                                vm.dataLoading = false;
+                            })
+                            .catch(function(error){
+                                vm.dataLoading = false;
+                                vm.error = 'Something went wrong.';
+                            });
+                    } else {
+                        // Load transaction data
+                        var vm = this
+                        axios.get('/transactions')
+                            .then(function(response){
+                                vm.openTransactions = response.data;
+                                vm.dataLoading = false;
+                            })
+                            .catch(function(error){
+                                vm.dataLoading = false;
+                                vm.error = 'Something went wrong.';
+                            });
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+
+</html>
