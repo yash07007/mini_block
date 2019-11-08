@@ -16,7 +16,7 @@ class Node:
     def save_keys(self):
         if(self.public_key != None and self.private_key != None):
             try:
-                with open('node-{}.txt'.format(self.node_id), mode='w') as f:
+                with open('data/node-{}.txt'.format(self.node_id), mode='w') as f:
                     f.write(self.public_key)
                     f.write('\n')
                     f.write(self.private_key)
@@ -28,7 +28,7 @@ class Node:
 
     def load_keys(self):
         try:
-            with open('node-{}.txt'.format(self.node_id), mode='r') as f:
+            with open('data/node-{}.txt'.format(self.node_id), mode='r') as f:
                 keys = f.readlines()
                 self.public_key, self.private_key = keys[0][:-1], keys[1]
             return True

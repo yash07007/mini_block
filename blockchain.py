@@ -26,7 +26,7 @@ class Blockchain:
 
     def load_data(self):
         try:
-            with open('blockchain-{}.txt'.format(self.node_id), mode='r') as f:
+            with open('data/blockchain-{}.txt'.format(self.node_id), mode='r') as f:
                 # Reading File
                 file_content = f.readlines()
                 # Getting BlockChain form file
@@ -52,7 +52,7 @@ class Blockchain:
 
     def save_data(self):
         try:
-            with open('blockchain-{}.txt'.format(self.node_id), mode='w') as f:
+            with open('data/blockchain-{}.txt'.format(self.node_id), mode='w') as f:
                 # Saving Blockchain to file
                 saveable_chain = [
                     block.__dict__ for block in [
