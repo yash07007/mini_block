@@ -25,7 +25,7 @@ while True:
    c, addr = s.accept()      
    print('Got connection from', addr) 
    SecretCode = pk.loads(c.recv(1024))  
-   obj = constituencyDetails.find({'SecretCode':123004})
+   obj = constituencyDetails.find({'SecretCode':SecretCode})
    obj = [e for e in obj] 
    c.send(pk.dumps(obj))
    c.close() 

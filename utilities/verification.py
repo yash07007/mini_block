@@ -28,3 +28,10 @@ class Verification:
             return check_voter_validity and Node.verify_transaction(transaction)
         else:
             return Node.verify_transaction(transaction)
+
+class Initialiser:
+
+    @staticmethod
+    def scan_card():
+        '''Card Scanning dummy Logic'''
+        return int(input('Enter 6-digit Card Secret: '))
