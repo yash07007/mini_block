@@ -1,2 +1,4 @@
-data
+data/*
+!data/.gitkeep
 democloud/cloud-data/*
+!democloud/cloud-data/.gitkeep
