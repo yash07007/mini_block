@@ -39,7 +39,7 @@ class Node:
                 self.public_key, self.private_key = keys[0][:-1], keys[1]
             return True
         except (IOError, IndexError):
-            print('Loading keys failed...')
+            print('Keys not available...')
             return False
 
     def generate_keys(self):

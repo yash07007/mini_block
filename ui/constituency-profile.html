@@ -40,12 +40,12 @@
                 </div>
             </div>
             <hr>
-            <div class="row my-3">
+            <!-- <div class="row my-3">
                 <div class="col">
                     <button class="btn btn-primary" @click="onLoadData">Load Constituency Data</button>
                 </div>
             </div>
-            <hr>
+            <hr> -->
             <div class="row my-3">
                 <div class="col-4">
                     <p>Constituency Id : {{ c_id }}</p>
@@ -79,7 +79,7 @@
     <script>
         var today = new Date();
         var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        new Vue({
+        var app = new Vue({
             el: '#app',
             data: {
                 c_id: null,
@@ -115,7 +115,8 @@
                         })
                 }
             }
-        })
+        });
+        app.onLoadData();
     </script>
 </body>
 

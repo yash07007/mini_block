@@ -30,7 +30,8 @@ def create_node():
         response = {
             'public_key': node.public_key,
             'private_key': node.private_key,
-            'votes': blockchain.count_votes()
+            'votes': blockchain.count_votes(),
+            'node_id': node.node_id
         }
         return jsonify(response), 201
     else:
@@ -47,12 +48,13 @@ def load_node():
         response = {
             'public_key': node.public_key,
             'private_key': node.private_key,
-            'votes': blockchain.count_votes()
+            'votes': blockchain.count_votes(),
+            'node_id': node.node_id
         }
         return jsonify(response), 201
     else:
         response = {
-        'message': 'Loading the keys failed.'
+        'message': 'Keys not available.'
         }
         return jsonify(response), 500
 

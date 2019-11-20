@@ -55,11 +55,16 @@
 <body>
     <div id="app">
         <div class="container">
-            <div class="row mb-3">
+            <!-- Main Header -->
+            <div class="row my-3">
                 <div class="col">
-                    <h1>Manage your Voter Blockchain</h1>
+                    <h1>Welcome to MiniBlock</h1>
+                </div>
+                <div class="col text-right">
+                    <h1 style="text-align: right">Node : {{node.node_id}}</h1>
                 </div>
             </div>
+            <!-- Main Navigation Pills -->
             <div class="row">
                 <div class="col">
                     <ul class="nav nav-pills">
@@ -76,19 +81,31 @@
                 </div>
             </div>
             <hr>
+            <!-- Success and Error Alerts -->
             <div v-if="error" class="alert alert-danger" role="alert">
                 {{ error }}
             </div>
-            <div v-if="success" class="alert alert-success" role="alert" style="overflow-x: scroll;">
+            <div v-if="success" class="alert alert-success" role="alert">
                 {{ success }}
             </div>
-            <div class="row">
+            <!-- Showing Keys for Debug -->
+            <div v-if="showKeys" class="row">
                 <div class="col">
+                    <strong><label for="pubKey">Public Key : </label></strong>
+                    <textarea id='pubKey' class='form-control' disabled>{{node.public_key}}</textarea> <br>
+                    <strong><label for="pvtKey">Private Key : </label></strong>
+                    <textarea id='pvtKey' class='form-control' disabled>{{node.private_key}}</textarea>
+                </div>
+            </div>
+            <hr>
+            <!-- Load and Create Key Buttons [Hidden] | Show/Hide Keys Button & Total Votes -->
+            <div v-if="node" class="row">
+                <!-- <div class="col">
                     <div v-if="!nodeLoading">
-                        <button class="btn btn-primary" @click="onCreateNode">
+                        <button class="btn btn-primary" @click="createKeys">
                             Create new Node
                         </button>
-                        <button class="btn btn-primary" @click="onLoadNode">
+                        <button class="btn btn-primary" @click="loadKeys">
                             Load Node
                         </button>
                     </div>
@@ -99,17 +116,27 @@
                         <div></div>
                         <div></div>
                     </div>
+                </div> -->
+                <div class="col">
+                    <button v-if="showKeys" class="btn btn-warning" @click="showKeys = false">
+                        Hide Keys
+                    </button>
+                    <button v-if="!showKeys" class="btn btn-warning" @click="showKeys = true">
+                        Show Keys
+                    </button>
                 </div>
                 <div class="col text-right">
-                    <h2>Total Votes: {{ votes.toFixed(2) }}</h2>
+                    <h2>Total Votes: {{ votes }}</h2>
                 </div>
             </div>
             <hr>
+            <!-- General notice of keys not loaded -->
             <div v-if="!node" class="row">
                 <div class="col">
                     <div class="alert alert-warning">Create a Node to start voting or to mine blocks!</div>
                 </div>
             </div>
+            <!-- Main Screen -->
             <div v-if="node" class="row">
                 <div class="col">
                     <form @submit.prevent="onSendTx">
@@ -132,25 +159,28 @@
                 </div>
             </div>
             <hr>
+            <!-- Nav Tabs for Blockchain and Open transaction Views -->
             <div class="row">
                 <div class="col">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a class="nav-link" :class="{active: view === 'chain'}" href="#" @click="view = 'chain'">Blockchain</a>
+                            <a class="nav-link" :class="{active: view === 'chain'}" href="#" @click="view ='chain';onLoadData();">Blockchain</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" :class="{active: view === 'tx'}" href="#" @click="view = 'tx'">Open Transactions</a>
+                            <a class="nav-link" :class="{active: view === 'tx'}" href="#" @click="view = 'tx';onLoadData();">Open Transactions</a>
                         </li>
                     </ul>
                 </div>
             </div>
+            <!-- Loading Active View -->
             <div class="row my-3">
                 <div class="col">
-                    <button class="btn btn-primary" @click="onLoadData">{{ view === 'chain' ? 'Load Blockchain' : 'Load Transactions' }}</button>
+                    <!-- <button class="btn btn-primary" @click="onLoadData">{{ view === 'chain' ? 'Load Blockchain' : 'Load Transactions' }}</button> -->
                     <button v-if="view === 'chain' && node" class="btn btn-success" @click="onMine">Mine Block</button>
                     <button class="btn btn-warning" @click="onResolve">Resolve Conflicts</button>
                 </div>
             </div>
+            <!-- Loader -->
             <div class="row">
                 <div class="col">
                     <div v-if="dataLoading" class="lds-ring">
@@ -209,7 +239,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-        new Vue({
+        var app = new Vue({
             el: '#app',
             data: {
                 blockchain: [],
@@ -226,7 +256,8 @@
                 outgoingTx: {
                     candidateId: '',
                     partyId: ''
-                }
+                },
+                showKeys: false
             },
             computed: {
                 loadedData: function () {
@@ -238,17 +269,18 @@
                 }
             },
             methods: {
-                onCreateNode: function () {
+                createKeys: function () {
                     // Send Http request to create a new wallet (and return keys)
                     var vm = this
                     vm.nodeLoading = true;
                     axios.post('/node')
                         .then(function(response){
                             vm.error = null;
-                            vm.success = 'Created node!  Public key: ' + response.data.public_key + ', Private key: ' + response.data.private_key
+                            vm.success = 'New Keys Created!'
                             vm.node = {
                                 public_key: response.data.public_key,
-                                private_key: response.data.private_key
+                                private_key: response.data.private_key,
+                                node_id: response.data.node_id
                             }
                             vm.votes = response.data.votes;
                             vm.nodeLoading = false;
@@ -260,17 +292,18 @@
                             vm.nodeLoading = false;
                         });
                 },
-                onLoadNode: function () {
+                loadKeys: function () {
                     // Send Http request to load an existing wallet (from a file on the server)
                     var vm = this;
                     this.nodeLoading = true;
                     axios.get('/node')
                         .then(function(response){
                             vm.error = null;
-                            vm.success = 'Loaded Node!  Public key: ' + response.data.public_key + ', Private key: ' + response.data.private_key
+                            vm.success = 'Keys Loaded!'
                             vm.node = {
                                 public_key: response.data.public_key,
-                                private_key: response.data.private_key
+                                private_key: response.data.private_key,
+                                node_id: response.data.node_id
                             }
                             vm.votes = response.data.votes;
                             vm.nodeLoading = false;
@@ -280,6 +313,7 @@
                             vm.error = error.response.data.message;
                             vm.node = null;
                             vm.nodeLoading = false;
+                            vm.createKeys();
                         });
                 },
                 onSendTx: function () {
@@ -358,7 +392,9 @@
                     }
                 }
             }
-        })
+        });
+        app.loadKeys();
+        app.onLoadData();
     </script>
 </body>
 
