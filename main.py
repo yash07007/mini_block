@@ -4,7 +4,8 @@ from flask_cors import CORS
 from utilities.verification import Initialiser
 from node import Node
 from blockchain import Blockchain
-
+from bson.json_util import loads
+from bson.json_util import dumps
 
 app = Flask(__name__)
 CORS(app)
@@ -20,6 +21,10 @@ def get_network_ui():
 @app.route('/profile', methods=['GET'])
 def get_profile_ui():
     return send_from_directory('ui', 'constituency-profile.html')
+
+@app.route('/vote', methods=['GET'])
+def get_vote_ui():
+    return send_from_directory('ui', 'voting.html')
 
 @app.route('/node', methods=['POST'])
 def create_node():
@@ -260,6 +265,7 @@ def get_peers():
     }
     return jsonify(response), 200 
 
+# Verify the route it should be GET
 @app.route('/profile', methods=['POST'])
 def get_data():
     data = node.get_data()
@@ -267,6 +273,13 @@ def get_data():
         'all_data': data
     }
     return jsonify(response), 200 
+
+@app.route('/data', methods=['GET'])
+def send_data():
+    response = {
+        'candidatesData': dumps(loads(node.data)[0])
+    }
+    return jsonify(response), 200
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -276,8 +289,7 @@ if __name__ == '__main__':
     port = args.port
     print(5*'='+'System Initalization'+5*'=')
     print('\nPlease Scan constituency smart card...')
-    secret = Initialiser.scan_card()    
-    '''Authorization Logic can be added'''
+    secret = Initialiser.scan_card()
     node = Node(port, secret)
     blockchain = Blockchain(node.public_key, port)
     app.run(host='0.0.0.0', port=port)

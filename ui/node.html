@@ -124,6 +124,9 @@
                     <button v-if="!showKeys" class="btn btn-warning" @click="showKeys = true">
                         Show Keys
                     </button>
+                    <a class="btn btn-outline-warning" target='_blank' href="/vote">
+                        Begin Voting
+                    </a>
                 </div>
                 <div class="col text-right">
                     <h2>Total Votes: {{ votes }}</h2>
@@ -137,7 +140,7 @@
                 </div>
             </div>
             <!-- Main Screen -->
-            <div v-if="node" class="row">
+            <!-- <div v-if="!node" class="row">
                 <div class="col">
                     <form @submit.prevent="onSendTx">
                         <div class="form-group">
@@ -157,8 +160,8 @@
                         <button :disabled="txLoading || outgoingTx.candidateId === '' || outgoingTx.partyId === '' " type="submit" class="btn btn-primary">Cast Vote</button>
                     </form>
                 </div>
-            </div>
-            <hr>
+            </div> -->
+            <!-- <hr> -->
             <!-- Nav Tabs for Blockchain and Open transaction Views -->
             <div class="row">
                 <div class="col">
@@ -253,10 +256,6 @@
                 error: null,
                 success: null,
                 votes: 0,
-                outgoingTx: {
-                    candidateId: '',
-                    partyId: ''
-                },
                 showKeys: false
             },
             computed: {
@@ -315,28 +314,6 @@
                             vm.nodeLoading = false;
                             vm.createKeys();
                         });
-                },
-                onSendTx: function () {
-                    // Send Transaction to backend
-                    this.txLoading = true;
-                    var vm = this;
-                    axios.post('/transaction', {
-                        candidateId: vm.outgoingTx.candidateId,
-                        partyId: vm.outgoingTx.partyId
-                    })
-                    .then(function(response){
-                        vm.error = null;
-                        vm.success = response.data.message;
-                        vm.votes = response.data.votes;
-                        vm.txLoading = false;
-                        console.log(response);
-                        
-                    })
-                    .catch(function(error){
-                        vm.success = null;
-                        vm.error = error.response.data.message;
-                        vm.txLoading = false;
-                    });
                 },
                 onMine: function() {
                     var vm = this

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Voting Management</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+        crossorigin="anonymous">
+</head>
+
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="row mb-3">
+                <div class="col">
+                    <h1>Cast Vote</h1>
+                </div>
+                <div class="col">
+                    <h2 class="text-right">Total Votes: {{ votes }}</h2>
+                </div>
+            </div>
+            <div v-if="error" class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+            <div v-if="success" class="alert alert-success" role="alert">
+                {{ success }}
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col">
+                    <div v-if="view === 'auth'" class="alert alert-info" role="alert">
+                        =======================================
+                        Please Scan Your Aadhar Card 
+                        ======================================
+                    </div>
+                    <ul v-if="view === 'cast'" class="list-group">
+                        <!-- FOR REFERENCE -->
+                        <!-- v-bind:style="{ backgroundColor: candidate.PartyColor, color: '#FFFFFF' }" -->
+                        <li v-for="candidate in candidates"
+                            style="cursor: pointer;"
+                            class="list-group-item list-group-item-action"
+                            @onclick="">
+                            <div class="row">
+                                <div class="col-4">
+                                    <span v-bind:style="{ display: 'inline-block', width: '25px', backgroundColor: candidate.PartyColor, color: candidate.PartyColor, border: '1px solid black' }" >.</span>
+                                    ({{candidate.CandidateId}}) {{ candidate.CandidateName }}
+                                </div>
+                                <div class="col-4">
+                                    ({{candidate.PartyId}}) {{candidate.PartyName}}
+                                </div>
+                                <div class="col-4 text-right">
+                                    <button @click="outgoingTx.candidateId = candidate.CandidateId;outgoingTx.partyId = candidate.PartyId;onCast();" class="btn-sm btn-primary">Cast Vote</button>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div v-if="view === 'thanks'" class="alert alert-success" role="alert">
+                            =========================================
+                            Thank You for Voting 
+                            ==========================================
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                candidates: [],
+                error: null,
+                success: null,
+                outgoingTx: {
+                    candidateId: '',
+                    partyId: ''
+                },
+                view: 'auth',
+                votes: 0
+            },
+            methods: {
+                loadData: function() {
+                    // Load all peer nodes of the local node server
+                    var vm = this
+                    axios.get('/data')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = 'Data loaded successfully.';
+                            vm.candidates = JSON.parse(response.data.candidatesData)['Candidates']
+                            setTimeout(function () { vm.success = null},2000);
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                    axios.get('/votes')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = null;
+                            vm.votes = response.data.total_votes
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                },
+                onCast: function () {
+                    // Send Transaction to backend
+                    this.txLoading = true;
+                    var vm = this;
+                    axios.post('/transaction', {
+                        candidateId: vm.outgoingTx.candidateId,
+                        partyId: vm.outgoingTx.partyId
+                    })
+                    .then(function(response){
+                        vm.error = null;
+                        vm.success = response.data.message;
+                        vm.votes = response.data.votes;
+                        vm.txLoading = false;
+                        
+                    })
+                    .catch(function(error){
+                        vm.success = null;
+                        vm.error = error.response.data.message;
+                        vm.txLoading = false;
+                    });
+                    axios.get('/votes')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = null;
+                            vm.votes = response.data.total_votes
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                }
+            }
+        });
+        app.loadData();
+    </script>
+</body>
+
+</html>
