@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Voting Management - C_Profile</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
+            crossorigin="anonymous">
+    </head>
+    <body>
+        <div id="app">
+            <div class="container">
+                <div class="row my-3">
+                    <div class="col">
+                        <h1>Constituency Profile</h1>
+                    </div>
+                </div>
+                <div v-if="error" class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+                <div v-if="success" class="alert alert-success" role="alert">
+                    {{ success }}
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Node</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="/network">Network</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="/profile">Constituency Profile</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <hr>
+                <div class="row my-3">
+                    <div class="col-4">
+                        <p>Constituency Id : {{ c_id }}</p>
+                        <p>Constituency City : {{ c_name }}</p>
+                        <p>Constituency State : {{ c_state }}</p>
+                    </div>
+                    <div class="col-4 offset-4">
+                        <p>Date : {{ date }}</p>
+                        <p>Total Contesting Candidates : {{ totalCanditates }}</p>
+                        <p>Total Eligible Voters : {{ totalVoters }}</p>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <ul class="nav nav-tabs">
+                            <li class="nav-item">
+                                <a class="nav-link" :class="{active: view === 'candidates'}" href="#" @click="view ='candidates';">Candidates</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" :class="{active: view === 'voters'}" href="#" @click="view = 'voters';">Voters</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row my-3">
+                    <div class="col">
+                        <div v-if="view === 'candidates'">
+                            <h2 class="my-3">Candidates</h2>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Sr no.</th>
+                                        <th scope="col">Candidate Id</th>
+                                        <th scope="col">Candidate Name</th>
+                                        <th scope="col">Party Name</th>
+                                        <th scope="col">Party Id</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(candidate,index) in candidates">
+                                        <th scope="row">{{index + 1}}</th>
+                                        <td>{{ candidate.CandidateId }}</td>
+                                        <td>{{ candidate.CandidateName }}</td>
+                                        <td>{{ candidate.PartyName }}</td>
+                                        <td>{{ candidate.PartyId }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-if="view === 'voters'">
+                            <h2 class="my-3">Voters</h2>
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Sr no.</th>
+                                        <th scope="col">Id</th>
+                                        <th scope="col">Name</th>
+                                        <th scope="col">Gender</th>
+                                        <th scope="col">Biometrics</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(voter,index) in voters">
+                                        <th scope="row">{{index + 1}}</th>
+                                        <td>{{ voter.VoterId }}</td>
+                                        <td>{{ voter.VoterName }}</td>
+                                        <td>{{ voter.VoterGender }}</td>
+                                        <td>{{ voter.VoterBiometric }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script>
+            var today = new Date();
+            var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            var app = new Vue({
+                el: '#app',
+                data: {
+                    c_id: null,
+                    c_name: null,
+                    c_state: null,
+                    totalCanditates: null,
+                    totalVoters: null,
+                    date: today.getDate()+' '+months[today.getMonth()]+' '+today.getFullYear(),
+                    candidates: [],
+                    voters: [],
+                    view: 'candidates',
+                    error: null,
+                    success: null
+                },
+                methods: {
+                    onLoadData: function() {
+                        // Load all data from the locally downloded store
+                        var vm = this
+                        axios.get('/data')
+                            .then(function(response){
+                                vm.error = null;
+                                vm.success = 'Fetched data successfully.';
+                                data = JSON.parse(response.data.constituencyData);
+                                vm.c_id = data['ConstId'];
+                                vm.c_name = data['ConstName']
+                                vm.c_state = data['ConstState']
+                                vm.totalCanditates = data['NumberOfContestingCandidates']
+                                vm.totalVoters = data['NumberOfEligibleVoters']
+                                vm.candidates = data['Candidates']
+                                vm.voters = data['Voters']
+                                setTimeout(function(){vm.success = null},3000)
+                            })
+                            .catch(function(error){
+                                vm.success = null;
+                                vm.error = error.response.data.message;
+                            })
+                    }
+                }
+            });
+            app.onLoadData();
+        </script>
+    </body>
+</html>

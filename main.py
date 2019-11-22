@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 
 from utilities.verification import Initialiser
+from utilities.verification import Authentication
 from node import Node
 from blockchain import Blockchain
 from bson.json_util import loads
@@ -20,7 +21,7 @@ def get_network_ui():
 
 @app.route('/profile', methods=['GET'])
 def get_profile_ui():
-    return send_from_directory('ui', 'constituency-profile.html')
+    return send_from_directory('ui', 'profile.html')
 
 @app.route('/vote', methods=['GET'])
 def get_vote_ui():
@@ -265,19 +266,21 @@ def get_peers():
     }
     return jsonify(response), 200 
 
-# Verify the route it should be GET
-@app.route('/profile', methods=['POST'])
-def get_data():
-    data = node.get_data()
-    response = {
-        'all_data': data
-    }
-    return jsonify(response), 200 
-
 @app.route('/data', methods=['GET'])
 def send_data():
     response = {
-        'candidatesData': dumps(loads(node.data)[0])
+        'constituencyData': dumps(loads(node.data)[0])
+    }
+    return jsonify(response), 200
+
+@app.route('/authenticate', methods=['POST'])
+def authenticate_voter():
+    values = request.get_json()
+    scannedId = values['scannedId']
+    validity, voterData = Authentication.authenticate(scannedId, node)
+    response = {
+        'validVoter' : validity,
+        'voterData': voterData
     }
     return jsonify(response), 200
 

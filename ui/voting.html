@@ -34,10 +34,24 @@
                         =======================================
                         Please Scan Your Aadhar Card 
                         ======================================
+                        <hr>
+                        <div class="row">
+                            <div class="offset-4 col-4">
+                                <label for="scannedId">Enter Scanned Id Here:</label>
+                                <input v-model.lazy='scannedId' id="scannedId" class="form-control" type="text">
+                                <button class="btn btn-primary my-2 btn-block" @click="authenticateVoter(scannedId)">Scan Card</button>
+                            </div>
+                        </div>
+                        <hr v-if="voterValid">
+                        <div v-if="voterValid" class="row">
+                            <div class="offset-4 col-4">
+                                <label for="scannedBio">Enter Scanned Biometric:</label>
+                                <input v-model.lazy='scannedBio' id="scannedBio" class="form-control" type="text">
+                                <button class="btn btn-primary my-2 btn-block" @click="authenticateBio(scannedBio)">Scan Fingerprint</button>
+                            </div>
+                        </div>
                     </div>
                     <ul v-if="view === 'cast'" class="list-group">
-                        <!-- FOR REFERENCE -->
-                        <!-- v-bind:style="{ backgroundColor: candidate.PartyColor, color: '#FFFFFF' }" -->
                         <li v-for="candidate in candidates"
                             style="cursor: pointer;"
                             class="list-group-item list-group-item-action"
@@ -79,6 +93,7 @@
             el: '#app',
             data: {
                 candidates: [],
+                voters: [],
                 error: null,
                 success: null,
                 outgoingTx: {
@@ -87,7 +102,11 @@
                 },
                 view: 'auth',
                 votes: 0,
-                disable: false
+                disable: false,
+                scannedId: '',
+                scannedBio: '',
+                voterValid: 0,
+                loadedBiometric: ''
             },
             methods: {
                 loadData: function() {
@@ -97,7 +116,8 @@
                         .then(function(response){
                             vm.error = null;
                             vm.success = 'Data loaded successfully.';
-                            vm.candidates = JSON.parse(response.data.candidatesData)['Candidates']
+                            vm.candidates = JSON.parse(response.data.constituencyData)['Candidates']
+                            vm.voters = JSON.parse(response.data.constituencyData)['Voters']
                             setTimeout(function () { vm.success = null},2000);
                         })
                         .catch(function(error){
@@ -114,6 +134,46 @@
                             vm.success = null;
                             vm.error = error.response.data.message;
                         });
+                },
+                authenticateVoter: function (scannedId) {
+                    var vm = this;
+                    axios.post('/authenticate', { scannedId: vm.scannedId})
+                        .then(function(response){
+                            console.log(response)
+                            vm.voterValid = response.data.validVoter
+                            if(vm.voterValid) {
+                                voterData = JSON.parse(response.data.voterData)
+                                vm.loadedBiometric = voterData['VoterBiometric']
+                                vm.error = null
+                                if(voterData['VoterGender'] == 'Male') {
+                                    vm.success = 'Hello Mr. ' + voterData['VoterName'] + ' please give your fingerprint.';
+                                } else {
+                                    vm.success = 'Hello Ms. ' + voterData['VoterName'] + ' please give your fingerprint.';
+                                }
+                            } else {
+                                vm.success = null;
+                                vm.error = 'Sorry you name is not in electroral roll for this constituency.'
+                            }
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                },
+                authenticateBio: function(scannedBio) {
+                    vm = this;
+                    if(scannedBio == vm.loadedBiometric) {
+                        vm.error = null;
+                        vm.success = 'Biometric Successfully Verified';
+                        setTimeout(function(){
+                            vm.success = null;
+                            vm.view = 'cast';
+                        },2000)
+                    } else {
+                        vm.error = 'Biometric Print does not match with Id, Reloading session...';
+                        vm.success = null;
+                        setTimeout(function(){location.reload()},5000)
+                    }
                 },
                 onCast: function () {
                     // Send Transaction to backend
@@ -139,13 +199,13 @@
                             vm.success = null;
                             vm.votes = response.data.total_votes;
                             setTimeout(function(){vm.view = 'thanks'},2000);
-                            setTimeout(function(){vm.view = 'auth'},5000);
+                            setTimeout(function(){location.reload()},7000);
                         })
                         .catch(function(error){
                             vm.success = null;
                             vm.error = error.response.data.message;
                             setTimeout(function(){vm.view = 'thanks'},2000);
-                            setTimeout(function(){vm.view = 'auth'},5000);
+                            setTimeout(function(){location.reload()},7000);
                         });
                 }
             }

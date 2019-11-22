@@ -81,7 +81,7 @@ class Node:
 
     def download_data(self, card_secret):
         s = socket.socket()                  
-        s.connect(('localhost', 12345)) 
+        s.connect(('localhost', 12345))
         s.send(pk.dumps(card_secret))
         data = pk.loads(s.recv(10000))
         s.close()

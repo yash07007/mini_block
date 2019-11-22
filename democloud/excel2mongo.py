@@ -28,6 +28,17 @@ for entry in df:
         candidateData["PartyColor"] = candidate[5]
         candidatesData.append(candidateData)
 
+    votersData = []
+    voters = pd.read_csv('./raw-data/roll/' + entry[1] + '.csv')
+    voters = voters.values
+    for voter in voters:
+        voterData = {}
+        voterData["VoterId"] = voter[0]
+        voterData["VoterName"] = voter[1]
+        voterData["VoterGender"] = voter[2]
+        voterData["VoterBiometric"] = voter[3]
+        votersData.append(voterData)
+
     document = {}
 
     document["SecretCode"]  = entry[0] 
@@ -37,6 +48,7 @@ for entry in df:
     document["NumberOfEligibleVoters"] = entry[4]
     document["NumberOfContestingCandidates"] = entry[5]
     document["Candidates"] = candidatesData
+    document["Voters"] = votersData
 
     documents.append(document)
 

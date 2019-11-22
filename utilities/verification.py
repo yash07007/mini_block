@@ -1,5 +1,7 @@
 from utilities.hash_util import hash_string_256,hash_block
 from node import Node
+from bson.json_util import loads
+from bson.json_util import dumps
 
 
 class Verification:
@@ -33,5 +35,20 @@ class Initialiser:
 
     @staticmethod
     def scan_card():
-        '''Card Scanning dummy Logic'''
+        '''Card Scanning dummy Logic for System Initialization'''
         return int(input('Enter 6-digit Card Secret: '))
+
+class Authentication:
+
+    @staticmethod
+    def authenticate(scannedId, node):
+        allVoters = loads(node.data)[0]['Voters']
+        validity = 0
+        voterData = ''
+        for entry in allVoters:
+            if(scannedId == entry['VoterId']):
+                validity = 1
+                voterData = dumps(entry)
+        if(validity == 0):
+            voterData = 'NA'
+        return (validity,voterData)
