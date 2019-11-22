@@ -19,6 +19,10 @@ Install prerequistes (Anaconda environment is advised as most of these comes pre
 ### Step 2
 After installation the first thing we need to do is host a mongodb server which can be done as follows:
 
+>Run batch file `democloud/hostDatabase.bat` if your MongoDB is installed on default paths and you can skip rest of step 2.
+>
+>In case the above method doesnt work for you path to your mongodb installation may be different for which you can follow along putting appropriate paths.
+
 Open command prompt in your machine and traverse to mongodb directory using `cd` command default path will be    
 
 >C:\Program Files\MongoDB\Server\4.0\bin
