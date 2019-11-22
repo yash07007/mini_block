@@ -16,7 +16,7 @@ df = df.values
 documents = []
 for entry in df:
     candidatesData = []
-    candidates = pd.read_excel('./raw-data/' + entry[1] + '.xlsx')
+    candidates = pd.read_excel('./raw-data/candidates/' + entry[1] + '.xlsx')
     candidates = candidates.values
     for candidate in candidates:
         candidateData = {}
@@ -26,7 +26,6 @@ for entry in df:
         candidateData["PartyName"] = candidate[3]
         candidateData["PartySymbol"] = candidate[4]
         candidateData["PartyColor"] = candidate[5]
-        candidateData["CandidatePicture"] = candidate[6]
         candidatesData.append(candidateData)
 
     document = {}
