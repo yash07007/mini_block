@@ -18,7 +18,7 @@
                     <h1>Cast Vote</h1>
                 </div>
                 <div class="col">
-                    <h2 class="text-right">Total Votes: {{ votes }}</h2>
+                    <h1 class="text-right">Total Votes: {{ votes }}</h1>
                 </div>
             </div>
             <div v-if="error" class="alert alert-danger" role="alert">
@@ -51,7 +51,13 @@
                                     ({{candidate.PartyId}}) {{candidate.PartyName}}
                                 </div>
                                 <div class="col-4 text-right">
-                                    <button @click="outgoingTx.candidateId = candidate.CandidateId;outgoingTx.partyId = candidate.PartyId;onCast();" class="btn-sm btn-primary">Cast Vote</button>
+                                    <button @click="outgoingTx.candidateId = candidate.CandidateId;
+                                                    outgoingTx.partyId = candidate.PartyId;
+                                                    onCast();" 
+                                            class="btn-sm btn-primary vote-btns"
+                                            :disabled='disable'>
+                                            Cast Vote
+                                    </button>
                                 </div>
                             </div>
                         </li>
@@ -80,7 +86,8 @@
                     partyId: ''
                 },
                 view: 'auth',
-                votes: 0
+                votes: 0,
+                disable: false
             },
             methods: {
                 loadData: function() {
@@ -101,7 +108,7 @@
                         .then(function(response){
                             vm.error = null;
                             vm.success = null;
-                            vm.votes = response.data.total_votes
+                            vm.votes = response.data.votes
                         })
                         .catch(function(error){
                             vm.success = null;
@@ -110,7 +117,7 @@
                 },
                 onCast: function () {
                     // Send Transaction to backend
-                    this.txLoading = true;
+                    this.disable = true;
                     var vm = this;
                     axios.post('/transaction', {
                         candidateId: vm.outgoingTx.candidateId,
@@ -120,23 +127,25 @@
                         vm.error = null;
                         vm.success = response.data.message;
                         vm.votes = response.data.votes;
-                        vm.txLoading = false;
-                        
+                        setTimeout(function () { vm.success = null},2000);
                     })
                     .catch(function(error){
                         vm.success = null;
                         vm.error = error.response.data.message;
-                        vm.txLoading = false;
                     });
                     axios.get('/votes')
                         .then(function(response){
                             vm.error = null;
                             vm.success = null;
-                            vm.votes = response.data.total_votes
+                            vm.votes = response.data.total_votes;
+                            setTimeout(function(){vm.view = 'thanks'},2000);
+                            setTimeout(function(){vm.view = 'auth'},5000);
                         })
                         .catch(function(error){
                             vm.success = null;
                             vm.error = error.response.data.message;
+                            setTimeout(function(){vm.view = 'thanks'},2000);
+                            setTimeout(function(){vm.view = 'auth'},5000);
                         });
                 }
             }
