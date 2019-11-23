@@ -1,0 +1,5 @@
+SecretCode,ConstiId,ConstName,ConstState,NumberOfEligibleVoters,NumberOfContestingCandidates
+123001,GJ01,Ahmedabad,Gujarat,50,5
+123002,MH01,Mumbai,Maharastra,60,4
+123003,UP01,Lukhnow,Uttar Pradesh,100,6
+123004,BI01,Patna,Bihar,90,7
