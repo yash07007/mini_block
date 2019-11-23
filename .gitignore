@@ -1,7 +1,7 @@
 data/*
 !data/.gitkeep
-democloud/cloud-data/*
-!democloud/cloud-data/.gitkeep
+cloud/cloud-data/*
+!cloud/cloud-data/.gitkeep
 *.pyc
 *.pyo
 __pycache__/
