@@ -64,7 +64,7 @@ class Node:
         if(self.data != None):
             try:
                 with open('data/node-{}-data.txt'.format(self.node_id), mode='w') as f:
-                    f.write(dumps(self.data))
+                    f.write(self.data)
                 return True
             except (IOError, IndexError):
                 print('Saving constituency data failed...')
@@ -73,24 +73,35 @@ class Node:
     def load_data(self):
         try:
             with open('data/node-{}-data.txt'.format(self.node_id), mode='r') as f:
-                self.data = f.readlines()[0]
+                self.data = f.read()
             return True
         except (IOError, IndexError):
-            print('Loading constituency data failed...')
+            print('Local constituency data doesnt exists...')
             return False
 
     def download_data(self, card_secret):
-        s = socket.socket()                  
-        s.connect(('localhost', 12345))
-        s.send(pk.dumps(card_secret))
-        data = pk.loads(s.recv(100000))
-        s.close()
-        self.data = dumps(data)
-        if(self.save_data()):
-            print('Downloaded data saved locally successfully')
+        if(card_secret == 'NA'):
+            loaded = self.load_data()
+            if(loaded):
+                print('local data restored')
+            else:
+                print('no local data available')
         else:
-            print('Please format and restart device...')    
-        return None
+            s = socket.socket()                  
+            s.connect(('localhost', 12345))
+            s.send(pk.dumps(card_secret))
+            data = pk.loads(s.recv(100000))
+            s.close()
+            voters = data[0]['Voters']
+            for voter in voters:
+                voter['VoterAttendence'] = '-'
+            data[0]['Voters'] = voters
+            self.data = dumps(data)
+            if(self.save_data()):
+                print('Downloaded data saved locally successfully')
+            else:
+                print('Please format and restart device...')    
+            return None
 
     def get_data(self):
         if(self.data):
@@ -98,3 +109,13 @@ class Node:
         else:
             self.data = loads(self.load_data())
             return self.data
+
+    def mark_attendence(self, roll_no):
+        data = loads(self.data)
+        voters = data[0]['Voters']
+        for voter in voters:
+            if(voter['VoterId'] == roll_no):
+                voter['VoterAttendence'] = 'VOTED'
+        data[0]['Voters'] = voters
+        self.data = dumps(data)
+        return self.save_data()

@@ -140,7 +140,7 @@
                     axios.post('/authenticate', { scannedId: vm.scannedId})
                         .then(function(response){
                             vm.voterValid = response.data.validVoter
-                            if(vm.voterValid) {
+                            if(vm.voterValid == 1) {
                                 voterData = JSON.parse(response.data.voterData)
                                 vm.loadedBiometric = voterData['VoterBiometric']
                                 vm.error = null
@@ -149,7 +149,11 @@
                                 } else {
                                     vm.success = 'Hello Ms. ' + voterData['VoterName'] + ' please give your fingerprint.';
                                 }
-                            } else {
+                            } else if(vm.voterValid == -1 ) {
+                                vm.success = null;
+                                vm.error = 'Your vote has already been registered.'
+                            }
+                            else {
                                 vm.success = null;
                                 vm.error = 'Sorry you name is not in electroral roll for this constituency.'
                             }
@@ -192,20 +196,18 @@
                         vm.success = null;
                         vm.error = error.response.data.message;
                     });
-                    axios.get('/votes')
-                        .then(function(response){
-                            vm.error = null;
-                            vm.success = null;
-                            vm.votes = response.data.total_votes;
-                            setTimeout(function(){vm.view = 'thanks'},2000);
-                            setTimeout(function(){location.reload()},7000);
-                        })
-                        .catch(function(error){
-                            vm.success = null;
-                            vm.error = error.response.data.message;
-                            setTimeout(function(){vm.view = 'thanks'},2000);
-                            setTimeout(function(){location.reload()},7000);
-                        });
+                    axios.post('/mark-attendence', {attendenceRollNo: vm.scannedId})
+                    .then(function(response){
+                        console.log('attendence_response',response)
+                        setTimeout(function () { vm.view = 'thanks'},5000);
+                        setTimeout(function () { location.reload() },8000);
+                    })
+                    .catch(function(error){
+                        vm.success = null;
+                        vm.error = error.response.data.message;
+                        setTimeout(function () { vm.view = 'thanks'},5000);
+                        setTimeout(function () { location.reload() },8000);
+                    });
                 }
             }
         });

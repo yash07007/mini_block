@@ -45,10 +45,14 @@ class Authentication:
         allVoters = loads(node.data)[0]['Voters']
         validity = 0
         voterData = ''
-        for entry in allVoters:
-            if(scannedId == entry['VoterId']):
+        for voter in allVoters:
+            if(voter['VoterAttendence'] == 'VOTED'):
+                validity = -1
+                voterData = 'NA'
+            if(scannedId == voter['VoterId'] and voter['VoterAttendence'] != 'VOTED'):
                 validity = 1
-                voterData = dumps(entry)
+                voterData = dumps(voter)
+                
         if(validity == 0):
             voterData = 'NA'
         return (validity,voterData)

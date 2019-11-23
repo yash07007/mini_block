@@ -5,6 +5,7 @@ from utilities.verification import Initialiser
 from utilities.verification import Authentication
 from node import Node
 from blockchain import Blockchain
+import pickle as pk
 from bson.json_util import loads
 from bson.json_util import dumps
 
@@ -284,15 +285,30 @@ def authenticate_voter():
     }
     return jsonify(response), 200
 
+@app.route('/mark-attendence', methods=['POST'])
+def mark_voter_attendence():
+    values = request.get_json()
+    roll_no = values['attendenceRollNo']
+    mark = node.mark_attendence(roll_no)
+    response = {
+        'marked': mark
+    }
+    return jsonify(response), 200
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('-p', '--port', type=int, default=5000)
+    parser.add_argument('-m', '--mode', type=str, default='initialize')
     args = parser.parse_args()
     port = args.port
-    print(5*'='+'System Initalization'+5*'=')
-    print('\nPlease Scan constituency smart card...')
-    secret = Initialiser.scan_card()
+    mode = args.mode
+    if(mode == 'initialize'):
+        print('\n'+(5*'=')+'System Initalization'+(5*'='))
+        print('\nPlease Scan constituency smart card...')
+        secret = Initialiser.scan_card()
+    elif(mode == 'restart'):
+        secret = 'NA'
     node = Node(port, secret)
     blockchain = Blockchain(node.public_key, port)
     app.run(host='0.0.0.0', port=port)

@@ -88,7 +88,10 @@
                             </table>
                         </div>
                         <div v-if="view === 'voters'">
-                            <h2 class="my-3">Voters</h2>
+                            <h2 class="my-3">
+                                Voters
+                                <button class="btn btn-sm btn-primary" @click="onLoadData">Refresh</button>
+                            </h2>
                             <table class="table">
                                 <thead>
                                     <tr>
@@ -97,6 +100,7 @@
                                         <th scope="col">Name</th>
                                         <th scope="col">Gender</th>
                                         <th scope="col">Biometrics</th>
+                                        <th scope="col">Attendence</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -106,6 +110,7 @@
                                         <td>{{ voter.VoterName }}</td>
                                         <td>{{ voter.VoterGender }}</td>
                                         <td>{{ voter.VoterBiometric }}</td>
+                                        <td>{{ voter.VoterAttendence }}</td>
                                     </tr>
                                 </tbody>
                             </table>
