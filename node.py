@@ -83,7 +83,7 @@ class Node:
         s = socket.socket()                  
         s.connect(('localhost', 12345))
         s.send(pk.dumps(card_secret))
-        data = pk.loads(s.recv(10000))
+        data = pk.loads(s.recv(100000))
         s.close()
         self.data = dumps(data)
         if(self.save_data()):

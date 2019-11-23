@@ -139,7 +139,6 @@
                     var vm = this;
                     axios.post('/authenticate', { scannedId: vm.scannedId})
                         .then(function(response){
-                            console.log(response)
                             vm.voterValid = response.data.validVoter
                             if(vm.voterValid) {
                                 voterData = JSON.parse(response.data.voterData)
