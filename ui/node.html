@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Voting Management</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4"
-        crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous"> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
     <style>
         .lds-ring {
             display: inline-block;
@@ -89,7 +89,7 @@
                 {{ success }}
             </div>
             <!-- Showing Keys for Debug -->
-            <div v-if="showKeys" class="row">
+            <div class="row collapse" id="showkeys">
                 <div class="col">
                     <strong><label for="pubKey">Public Key : </label></strong>
                     <textarea id='pubKey' class='form-control' disabled>{{node.public_key}}</textarea> <br>
@@ -97,49 +97,39 @@
                     <textarea id='pvtKey' class='form-control' disabled>{{node.private_key}}</textarea>
                 </div>
             </div>
-            <hr>
-            <!-- Load and Create Key Buttons [Hidden] | Show/Hide Keys Button & Total Votes -->
+            <hr v-if="showKeys">
+            <!-- Show/Hide Keys Button & Total Votes -->
             <div v-if="node" class="row">
-                <!-- <div class="col">
-                    <div v-if="!nodeLoading">
-                        <button class="btn btn-primary" @click="createKeys">
-                            Create new Node
-                        </button>
-                        <button class="btn btn-primary" @click="loadKeys">
-                            Load Node
-                        </button>
-                    </div>
-
-                    <div v-if="nodeLoading" class="lds-ring">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                    </div>
-                </div> -->
                 <div class="col">
-                    <button v-if="showKeys" class="btn btn-warning" @click="showKeys = false">
+                    <button v-if="showKeys" class="btn btn-warning" data-toggle="collapse" data-target="#showkeys" @click="showKeys = false">
                         Hide Keys
                     </button>
-                    <button v-if="!showKeys" class="btn btn-warning" @click="showKeys = true">
+                    <button v-if="!showKeys" class="btn btn-warning" data-toggle="collapse" data-target="#showkeys" @click="showKeys = true">
                         Show Keys
                     </button>
-                    <a class="btn btn-outline-warning" target='_blank' href="/vote">
+                    <a class="btn btn-info" target='_blank' href="/vote">
                         Begin Voting
+                    </a>
+                    <a class="btn btn-danger" href="">
+                        End Voting
                     </a>
                 </div>
                 <div class="col text-right">
-                    <h2>Total Votes: {{ votes }}</h2>
+                    <h2>
+                        <button v-if='mining === false' class="btn btn-success" @click="mining = true;onMine();">Start Mining</button>
+                        <button v-if='mining' class="btn btn-success" type="button" disabled>
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Mining in {{ seconds }} seconds..
+                        </button>
+                        <button v-if='mining' class="btn btn-danger" @click="mining = false;" onclick="clearInterval(mineClock);clearInterval(mineTimer);">Stop Mining</button>
+                        <button class="btn btn-warning" @click="onResolve">Resolve Conflicts</button>
+                        Total Votes: {{ votes }}
+                    </h2>
                 </div>
             </div>
             <hr>
-            <!-- General notice of keys not loaded -->
-            <div v-if="!node" class="row">
-                <div class="col">
-                    <div class="alert alert-warning">Create a Node to start voting or to mine blocks!</div>
-                </div>
-            </div>
-            <div class="row">
+            <!-- Chain/Tx Nav -->
+            <div class="row mb-2">
                 <div class="col">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
@@ -149,14 +139,6 @@
                             <a class="nav-link" :class="{active: view === 'tx'}" href="#" @click="view = 'tx';onLoadData();">Open Transactions</a>
                         </li>
                     </ul>
-                </div>
-            </div>
-            <!-- Loading Active View Nav-->
-            <div class="row my-3">
-                <div class="col">
-                    <!-- <button class="btn btn-primary" @click="onLoadData">{{ view === 'chain' ? 'Load Blockchain' : 'Load Transactions' }}</button> -->
-                    <button v-if="view === 'chain' && node" class="btn btn-success" @click="onMine">Mine Block</button>
-                    <button class="btn btn-warning" @click="onResolve">Resolve Conflicts</button>
                 </div>
             </div>
             <!-- Loading Active View -->
@@ -171,13 +153,13 @@
                     <div v-if="!dataLoading" class="accordion">
                         <div class="card" v-for="(data, index) in loadedData">
                             <div v-if="view === 'chain'" class="card-header">
-                                <h5 class="mb-0">
-                                    <button class="btn btn-link" type="button" @click="showElement === index ? showElement = null : showElement = index">
+                                <h5 class="mb-0" data-toggle="collapse" :data-target="'#colbc' + data.index">
+                                    <button class="btn btn-link" type="button">
                                         Block #{{ data.index }}
                                     </button>
                                 </h5>
                             </div>
-                            <div v-if="view === 'chain'" class="collapse" :class="{show: showElement === index}">
+                            <div v-if="view === 'chain'" class="collapse" :id="'colbc' + data.index">
                                 <div class="card-body">
                                     <p>Previous Hash: {{ data.previous_hash }}</p>
                                     <div class="list-group">
@@ -191,13 +173,13 @@
                             </div>
 
                             <div v-if="view === 'tx'" class="card-header">
-                                <h5 class="mb-0">
-                                    <button class="btn btn-link" type="button" @click="showElement === index ? showElement = null : showElement = index">
+                                <h5 class="mb-0" data-toggle="collapse" :data-target="'#coltx' + data.index">
+                                    <button class="btn btn-link" type="button">
                                         Transaction #{{ index }}
                                     </button>
                                 </h5>
                             </div>
-                            <div v-if="view === 'tx'" class="collapse" :class="{show: showElement === index}">
+                            <div v-if="view === 'tx'" class="collapse" :id="'coltx' + data.index">
                                 <div class="card-body">
                                     <div class="list-group">
                                         <div class="list-group-item flex-column align-items-start">
@@ -215,9 +197,13 @@
         </div>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
+        var mineClock,mineTimer;
         var app = new Vue({
             el: '#app',
             data: {
@@ -228,11 +214,12 @@
                 nodeLoading: false,
                 txLoading: false,
                 dataLoading: false,
-                showElement: null,
                 error: null,
                 success: null,
                 votes: 0,
-                showKeys: false
+                showKeys: false,
+                mining: false,
+                seconds: 60
             },
             computed: {
                 loadedData: function () {
@@ -282,6 +269,9 @@
                             }
                             vm.votes = response.data.votes;
                             vm.nodeLoading = false;
+                            setInterval(() => {
+                                vm.success = null
+                            }, 3000);
                         })
                         .catch(function(error){
                             vm.success = null;
@@ -293,16 +283,25 @@
                 },
                 onMine: function() {
                     var vm = this
-                    axios.post('/mine')
-                    .then(function(response){
-                        vm.error = null;
-                        vm.success = response.data.message;
-                        vm.votes = response.data.votes;
-                    })
-                    .catch(function(error){
-                        vm.success = null;
-                        vm.error = error.response.data.message;
-                    });
+                    mineTimer = setInterval(function(){
+                        axios.post('/mine')
+                        .then(function(response){
+                            vm.error = null;
+                            vm.success = response.data.message;
+                            vm.votes = response.data.votes;
+                            vm.seconds = 60;
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                    },60000);
+                    mineClock = setInterval(function(){
+                        vm.seconds = vm.seconds - 1;
+                        if(vm.seconds <= 0){
+                            vm.seconds = 0;
+                        }       
+                    },1000);
                 },
                 onResolve: function(){
                     var vm = this
