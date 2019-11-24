@@ -107,11 +107,14 @@
                     <button v-if="!showKeys" class="btn btn-warning" data-toggle="collapse" data-target="#showkeys" @click="showKeys = true">
                         Show Keys
                     </button>
-                    <a class="btn btn-info" target='_blank' href="/vote">
+                    <button class="btn btn-info" onclick="beginVoting()" :class='{disabled : votingClosed}'>
                         Begin Voting
-                    </a>
-                    <a class="btn btn-danger" href="">
+                    </button>
+                    <button class="btn btn-danger" onclick="votingWindow.close();" @click="votingClosed = true">
                         End Voting
+                    </button>
+                    <a v-if="votingClosed" class="btn btn-success" target='_blank' href="/results">
+                        Results
                     </a>
                 </div>
                 <div class="col text-right">
@@ -203,7 +206,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-        var mineClock,mineTimer;
+        var mineClock,mineTimer,votingWindow;
         var app = new Vue({
             el: '#app',
             data: {
@@ -219,7 +222,8 @@
                 votes: 0,
                 showKeys: false,
                 mining: false,
-                seconds: 60
+                seconds: 60,
+                votingClosed: false
             },
             computed: {
                 loadedData: function () {
@@ -347,6 +351,11 @@
         });
         app.loadKeys();
         app.onLoadData();
+
+        function beginVoting() {
+            var url = window.location.href;
+            votingWindow = window.open(url + 'vote', '_blank');
+        }
     </script>
 </body>
 
