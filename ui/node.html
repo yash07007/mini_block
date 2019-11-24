@@ -107,15 +107,15 @@
                     <button v-if="!showKeys" class="btn btn-warning" data-toggle="collapse" data-target="#showkeys" @click="showKeys = true">
                         Show Keys
                     </button>
-                    <button class="btn btn-info" onclick="beginVoting()" :class='{disabled : votingClosed}'>
+                    <button class="btn btn-info" onclick="beginVoting()" :disabled='votingClosed'>
                         Begin Voting
                     </button>
-                    <button class="btn btn-danger" onclick="votingWindow.close();" @click="votingClosed = true">
+                    <button class="btn btn-danger" onclick="closeVotingWindows();" @click="votingClosed = true;">
                         End Voting
                     </button>
-                    <a v-if="votingClosed" class="btn btn-success" target='_blank' href="/results">
+                    <button v-if="votingClosed" class="btn btn-success"  @click="onResults">
                         Results
-                    </a>
+                    </button>
                 </div>
                 <div class="col text-right">
                     <h2>
@@ -206,7 +206,7 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script>
-        var mineClock,mineTimer,votingWindow;
+        var mineClock,mineTimer,votingWindows = [];
         var app = new Vue({
             el: '#app',
             data: {
@@ -346,6 +346,10 @@
                                 vm.error = 'Something went wrong.';
                             });
                     }
+                },
+                onResults: function () {
+                    var vm = this
+                    //Write Logic Here
                 }
             }
         });
@@ -354,7 +358,12 @@
 
         function beginVoting() {
             var url = window.location.href;
-            votingWindow = window.open(url + 'vote', '_blank');
+            votingWindows.push(window.open(url + 'vote', '_blank'));
+        }
+        function closeVotingWindows() {
+            for (let w = 0; w < votingWindows.length; w++) {
+                votingWindows[w].close();
+            }
         }
     </script>
 </body>

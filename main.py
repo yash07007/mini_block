@@ -28,6 +28,10 @@ def get_profile_ui():
 def get_vote_ui():
     return send_from_directory('ui', 'voting.html')
 
+@app.route('/results', methods=['GET'])
+def get_result_ui():
+    return send_from_directory('ui', 'results.html')
+
 @app.route('/node', methods=['POST'])
 def create_node():
     node.create_keys()
@@ -312,5 +316,3 @@ if __name__ == '__main__':
     node = Node(port, secret)
     blockchain = Blockchain(node.public_key, port)
     app.run(host='0.0.0.0', port=port)
-
-

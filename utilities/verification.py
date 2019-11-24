@@ -46,13 +46,12 @@ class Authentication:
         validity = 0
         voterData = ''
         for voter in allVoters:
-            if(voter['VoterAttendence'] == 'VOTED'):
-                validity = -1
-                voterData = 'NA'
-            if(scannedId == voter['VoterId'] and voter['VoterAttendence'] != 'VOTED'):
+            if(scannedId == voter['VoterId']):
                 validity = 1
                 voterData = dumps(voter)
-                
+                if(voter['VoterAttendence'] == 'VOTED'):
+                    validity = -1
+                    voterData = 'NA'
         if(validity == 0):
             voterData = 'NA'
         return (validity,voterData)
