@@ -64,6 +64,7 @@
                     <h1 style="text-align: right">Node : {{node.node_id}}</h1>
                 </div>
             </div>
+
             <!-- Main Navigation Pills -->
             <div class="row">
                 <div class="col">
@@ -81,6 +82,7 @@
                 </div>
             </div>
             <hr>
+
             <!-- Success and Error Alerts -->
             <div v-if="error" class="alert alert-danger" role="alert">
                 {{ error }}
@@ -88,6 +90,7 @@
             <div v-if="success" class="alert alert-success" role="alert">
                 {{ success }}
             </div>
+
             <!-- Showing Keys for Debug -->
             <div class="row collapse" id="showkeys">
                 <div class="col">
@@ -98,7 +101,8 @@
                 </div>
             </div>
             <hr v-if="showKeys">
-            <!-- Show/Hide Keys Button & Total Votes -->
+
+            <!-- Buttons & Total Votes -->
             <div v-if="node" class="row">
                 <div class="col">
                     <button v-if="showKeys" class="btn btn-warning" data-toggle="collapse" data-target="#showkeys" @click="showKeys = false">
@@ -349,7 +353,16 @@
                 },
                 onResults: function () {
                     var vm = this
-                    //Write Logic Here
+                    axios.post('/upload-attendence')
+                        .then(function(response){
+                            console.log(response);
+                            vm.error = null;
+                            vm.success = response.data.serverResponse;
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
                 }
             }
         });

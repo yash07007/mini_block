@@ -89,6 +89,8 @@ class Node:
         else:
             s = socket.socket()                  
             s.connect(('localhost', 12345))
+            s.send('download'.encode())
+            print(s.recv(1024).decode())
             s.send(pk.dumps(card_secret))
             data = pk.loads(s.recv(100000))
             s.close()

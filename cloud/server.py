@@ -24,8 +24,24 @@ print('Server is listening...')
 while True: 
     c, addr = s.accept()      
     print('Got connection from', addr)
-    SecretCode = pk.loads(c.recv(1024))  
-    obj = constituencyDetails.find({'SecretCode':SecretCode})
-    obj = [e for e in obj] 
-    c.send(pk.dumps(obj))
-    c.close() 
+    query = c.recv(1024).decode()
+    if(query == 'download'):
+        c.send('ok download'.encode())
+        SecretCode = pk.loads(c.recv(1024))  
+        obj = constituencyDetails.find({'SecretCode':SecretCode})
+        obj = [e for e in obj] 
+        c.send(pk.dumps(obj))
+        c.close()
+    elif(query == 'upload'):
+        c.send('ok upload'.encode())
+        ConstId,attendedVoters = pk.loads(c.recv(100000)) 
+        c.send('Attendence Uploaded'.encode())
+        c.close()
+        with open('voter-attendence/' + ConstId + '.csv', 'w') as csvFile:
+            fields = ['VoterId', 'VoterName', 'VoterGender', 'VoterBiometric', 'VoterAttendence']
+            csvFile.write(','.join(fields))
+            csvFile.write('\n')
+            for voter in attendedVoters: 
+                csvFile.write(','.join([voter['VoterId'], voter['VoterName'], voter['VoterGender'], voter['VoterBiometric'], voter['VoterAttendence']]))
+                csvFile.write('\n')
+        print("writing completed")

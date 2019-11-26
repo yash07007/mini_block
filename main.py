@@ -5,6 +5,7 @@ from utilities.verification import Initialiser
 from utilities.verification import Authentication
 from node import Node
 from blockchain import Blockchain
+import socket
 import pickle as pk
 from bson.json_util import loads
 from bson.json_util import dumps
@@ -299,6 +300,22 @@ def mark_voter_attendence():
     }
     return jsonify(response), 200
 
+@app.route('/upload-attendence', methods=['POST'])
+def upload_attendence():
+    attendedVoters = loads(node.data)[0]['Voters']
+    ConstId = loads(node.data)[0]['ConstId']
+    s = socket.socket()
+    s.connect(('localhost', 12345))
+    s.send('upload'.encode())
+    print(s.recv(1024).decode())
+    s.send(pk.dumps((ConstId,attendedVoters)))
+    serverResponse = s.recv(1024).decode()
+    s.close()
+    response = {
+        'serverResponse': serverResponse
+    }
+    return jsonify(response), 200
+
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
@@ -315,4 +332,4 @@ if __name__ == '__main__':
         secret = 'NA'
     node = Node(port, secret)
     blockchain = Blockchain(node.public_key, port)
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
