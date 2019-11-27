@@ -17,14 +17,6 @@ CORS(app)
 def get_node_ui():
     return send_from_directory('ui', 'index.html')
 
-@app.route('/network', methods=['GET'])
-def get_network_ui():
-    return send_from_directory('ui', 'network.html')
-
-@app.route('/profile', methods=['GET'])
-def get_profile_ui():
-    return send_from_directory('ui', 'profile.html')
-
 @app.route('/vote', methods=['GET'])
 def get_vote_ui():
     return send_from_directory('ui', 'voting.html')
