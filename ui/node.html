@@ -140,10 +140,10 @@
                 <div class="col">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
-                            <a class="nav-link" :class="{active: view === 'chain'}" href="#" @click="view ='chain';onLoadData();">Blockchain</a>
+                            <a class="nav-link" :class="{active: view === 'chain'}" @click="view ='chain';onLoadData();">Blockchain</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" :class="{active: view === 'tx'}" href="#" @click="view = 'tx';onLoadData();">Open Transactions</a>
+                            <a class="nav-link" :class="{active: view === 'tx'}" @click="view = 'tx';onLoadData();">Open Transactions</a>
                         </li>
                     </ul>
                 </div>
