@@ -15,7 +15,7 @@ CORS(app)
 
 @app.route('/', methods=['GET'])
 def get_node_ui():
-    return send_from_directory('ui', 'node.html')
+    return send_from_directory('ui', 'index.html')
 
 @app.route('/network', methods=['GET'])
 def get_network_ui():
@@ -332,4 +332,4 @@ if __name__ == '__main__':
         secret = 'NA'
     node = Node(port, secret)
     blockchain = Blockchain(node.public_key, port)
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port)
