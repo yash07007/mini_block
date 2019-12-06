@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Voting Results</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.css">
+        <style>
+            .hide{
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="results">
+            <div class="container">
+                <div class="row my-3">
+                    <div class="col">
+                        <h1 class="display-1">Voting Results</h1>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <table class="table table-striped table-bordered" id="table">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>Sr No.</th>
+                                    <th>Con. Id</th>
+                                    <th>Con. Name</th>
+                                    <th>Con. State</th>
+                                    <th>Can. Id</th>
+                                    <th>Can. Name</th>
+                                    <th>Party Id</th>
+                                    <th>Party Name</th>
+                                    <th>Vote Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for='(row,index) in tableData'>
+                                    <td>{{ index+1 }}</td>
+                                    <td v-for='data in row'>
+                                        {{ data }}
+                                    </td>
+                                    <td> <span class="votes">{{ computeVotes(row[3],row[5]) }}</span> </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.js"></script>
+        <script> 
+            var results = new Vue({
+                el: '#results',
+                data : {
+                    blockchain: [],
+                    tableData: []
+                },
+                methods : {
+                    getData: function () {
+                       vm = this;
+                       axios.post('/result-data')
+                       .then(function(response){
+                            vm.error = null;
+                            vm.success = null;
+                            vm.blockchain = JSON.parse(response.data.chain)
+                            vm.tableData = response.data.tableData
+                        })
+                        .catch(function(error){
+                            vm.success = null;
+                            vm.error = error.response.data.message;
+                        });
+                    },
+                    computeVotes: function(canId,partyId) {
+                        let votes = 0;
+                        for (let index = 0; index < this.blockchain.length; index++) {
+                            const block = this.blockchain[index];
+                            for (let t_index = 0; t_index < block['transactions'].length; t_index++) {
+                                const transaction = block['transactions'][t_index];
+                                if(transaction['candidateId'] == canId && transaction['partyId'] == partyId) {
+                                    votes += 1;
+                                }
+                            }
+                        }
+                        return votes
+                    }
+                }
+            });
+            results.getData();
+            setTimeout(() => {
+                $('#table').DataTable();
+            }, 1000);
+        </script>
+    </body>
+</html>

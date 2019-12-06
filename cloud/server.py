@@ -1,7 +1,8 @@
 import socket
 import pymongo
 import pickle as pk
-
+import json
+import glob
 # Creating a Socket
 try: 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
@@ -32,16 +33,68 @@ while True:
         obj = [e for e in obj] 
         c.send(pk.dumps(obj))
         c.close()
-    elif(query == 'upload'):
+    elif(query == 'upload-attendence'):
         c.send('ok upload'.encode())
         ConstId,attendedVoters = pk.loads(c.recv(100000)) 
-        c.send('Attendence Uploaded'.encode())
-        c.close()
-        with open('voter-attendence/' + ConstId + '.csv', 'w') as csvFile:
+        with open('result-data/voter-attendence/' + ConstId + '.csv', 'w') as csvFile:
             fields = ['VoterId', 'VoterName', 'VoterGender', 'VoterBiometric', 'VoterAttendence']
             csvFile.write(','.join(fields))
             csvFile.write('\n')
             for voter in attendedVoters: 
                 csvFile.write(','.join([voter['VoterId'], voter['VoterName'], voter['VoterGender'], voter['VoterBiometric'], voter['VoterAttendence']]))
                 csvFile.write('\n')
-        print("writing completed")
+        c.send('Attendence Uploaded'.encode())
+        c.close()
+    elif(query == 'upload-chain'):
+        c.send('ok upload'.encode())
+        constId,chain = pk.loads(c.recv(100000))
+        with open('result-data/constituency-chains/' + ConstId + '.txt', 'w') as csvFile:
+            csvFile.write(json.dumps(chain))
+        c.send('Chain Uploaded'.encode())
+        c.close()
+    elif(query == 'download-results'):
+            allData = constituencyDetails.find({})
+            allData = [e for e in allData]
+            relevantData = [
+                (
+                    constituency['ConstId'],
+                    constituency['ConstName'],
+                    constituency['ConstState'], 
+                    [
+                        (
+                            candidate['CandidateId'], 
+                            candidate['CandidateName'], 
+                            candidate['PartyId'], 
+                            candidate['PartyName']
+                        ) for candidate in constituency['Candidates']
+                    ] 
+                )   for constituency in allData
+            ]
+            tableData = []
+            for constituency in relevantData:
+                for candidate in constituency[3]:
+                    tableData.append(
+                        (
+                            constituency[0], 
+                            constituency[1], 
+                            constituency[2], 
+                            candidate[0], 
+                            candidate[1], 
+                            candidate[2], 
+                            candidate[3]
+                        )
+                    )
+            maxlen = 0
+            maxuri = ''
+            for uri in glob.glob('result-data/constituency-chains/*.txt'):
+                with open(uri, 'r') as f:
+                    chain = json.loads(f.read())
+                    if(len(chain) > maxlen):
+                        maxuri = uri
+                        maxlen = len(chain)
+            with open(maxuri, 'r') as f:
+                chain = f.read()
+            responseData = (tableData, chain)
+            c.send(pk.dumps(responseData))
+            c.close()
+

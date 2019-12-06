@@ -298,7 +298,7 @@ def upload_attendence():
     ConstId = loads(node.data)[0]['ConstId']
     s = socket.socket()
     s.connect(('localhost', 12345))
-    s.send('upload'.encode())
+    s.send('upload-attendence'.encode())
     print(s.recv(1024).decode())
     s.send(pk.dumps((ConstId,attendedVoters)))
     serverResponse = s.recv(1024).decode()
@@ -307,6 +307,41 @@ def upload_attendence():
         'serverResponse': serverResponse
     }
     return jsonify(response), 200
+
+@app.route('/upload-chain', methods=['POST'])
+def upload_chain():
+    chain_snapshot = blockchain.get_chain()
+    dict_chain = [block.__dict__.copy() for block in chain_snapshot]
+    for dict_block in dict_chain:
+        dict_block['transactions'] = [tx.__dict__ for tx in dict_block['transactions']]
+    ConstId = loads(node.data)[0]['ConstId']
+    s = socket.socket()
+    s.connect(('localhost', 12345))
+    s.send('upload-chain'.encode())
+    print(s.recv(1024).decode())
+    s.send(pk.dumps((ConstId,dict_chain)))
+    serverResponse = s.recv(1024).decode()
+    s.close()
+    response = {
+        'serverResponse': serverResponse
+    }
+    return jsonify(response), 200
+
+@app.route('/result-data', methods=['POST'])
+def download_result_data():
+    s = socket.socket()                  
+    s.connect(('localhost', 12345))
+    s.send('download-results'.encode())
+    serverResponse = pk.loads(s.recv(100000))
+    tableData = [list(tup) for tup in serverResponse[0]]
+    chain = serverResponse[1]
+    s.close()
+    response = {
+        'chain': chain,
+        'tableData': tableData
+    }    
+    return jsonify(response), 200
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

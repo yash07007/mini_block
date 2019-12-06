@@ -5,5 +5,7 @@ cloud/cloud-data/*
 *.pyc
 *.pyo
 __pycache__/
-cloud/voter-attendence/*
-cloud/voter-attendence/.gitkeep
+cloud/result-data/voter-attendence/*
+cloud/result-data/constituency-chains/*
+!cloud/result-data/voter-attendence/.gitkeep
+!cloud/result-data/constituency-chains/.gitkeep
